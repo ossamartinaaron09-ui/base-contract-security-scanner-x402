@@ -50,6 +50,9 @@ class ClientTests(unittest.TestCase):
         good = {"payment_status": "VERIFIED_ON_CHAIN", "tx_hash": tx,
                 "audit_report": {"address": client.USDC, "is_contract": True}}
         cases = [(200, good, 0), (200, {**good, "tx_hash": "0x" + "b" * 64}, 1),
+                 (200, {**good, "audit_report": {"contract": client.USDC, "is_contract": True}}, 0),
+                 (200, {**good, "audit_report": {"contract": "0x" + "c" * 40}}, 1),
+                 (200, {**good, "audit_report": {"contract": client.USDC, "address": "0x" + "c" * 40}}, 1),
                  (200, {**good, "audit_report": {"error": "RPC unavailable"}}, 1),
                  (403, {"error": "Payment Verification Failed"}, 1)]
         for status, payload, expected in cases:

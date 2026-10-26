@@ -54,10 +54,13 @@ export function interpret({status, payload}, {address = USDC, txHash, maximum = 
   }
   if (status !== 200) throw new Error(`Gateway HTTP ${status}: ${payload.error || 'request failed'}`);
   const report = payload.audit_report;
+  const targets = report && typeof report === 'object'
+    ? ['contract', 'address'].filter(key => Object.hasOwn(report, key)).map(key => report[key]) : [];
   if (!txHash || payload.payment_status !== 'VERIFIED_ON_CHAIN' ||
       String(payload.tx_hash).toLowerCase() !== txHash.toLowerCase() ||
       !report || typeof report !== 'object' || Array.isArray(report) || report.error ||
-      String(report.address).toLowerCase() !== address.toLowerCase()) throw new Error('No matching completed report');
+      !targets.length || targets.some(target => String(target).toLowerCase() !== address.toLowerCase()))
+    throw new Error('No matching completed report');
   return {exitCode: 0, output: {http_status: 200, response: payload,
     report_source: 'gateway; not independently verified',
     warning: 'Bytecode heuristics do not establish security or detect honeypots reliably.'}};

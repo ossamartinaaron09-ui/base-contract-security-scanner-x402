@@ -31,6 +31,10 @@ test('report must match requested transaction and target', () => {
   const txHash = '0x' + 'a'.repeat(64);
   const good = {payment_status: 'VERIFIED_ON_CHAIN', tx_hash: txHash, audit_report: {address: USDC}};
   assert.equal(interpret({status: 200, payload: good}, {txHash}).exitCode, 0);
+  const current = {...good, audit_report: {contract: USDC, is_contract: true}};
+  assert.equal(interpret({status: 200, payload: current}, {txHash}).exitCode, 0);
+  assert.throws(() => interpret({status: 200, payload: {...good, audit_report: {contract: '0x' + 'c'.repeat(40)}}}, {txHash}));
+  assert.throws(() => interpret({status: 200, payload: {...good, audit_report: {contract: USDC, address: '0x' + 'c'.repeat(40)}}}, {txHash}));
   assert.throws(() => interpret({status: 200, payload: {...good, audit_report: {error: 'RPC failed'}}}, {txHash}));
   assert.throws(() => interpret({status: 200, payload: good}, {txHash: '0x' + 'b'.repeat(64)}));
   assert.throws(() => interpret({status: 403, payload: {error: 'Payment rejected'}}, {txHash}));

@@ -99,10 +99,11 @@ def main(argv=None):
         if status != 200:
             raise ValueError("gateway returned HTTP %s: %s" % (status, payload.get("error", "request failed")))
         report = payload.get("audit_report")
+        targets = [report[key] for key in ("contract", "address") if key in report] if isinstance(report, dict) else []
         if (not args.tx_hash or payload.get("payment_status") != "VERIFIED_ON_CHAIN"
                 or str(payload.get("tx_hash", "")).lower() != args.tx_hash.lower()
                 or not isinstance(report, dict) or report.get("error")
-                or str(report.get("address", "")).lower() != args.address.lower()):
+                or not targets or any(str(target).lower() != args.address.lower() for target in targets)):
             raise ValueError("gateway did not return a matching completed report")
         print(json.dumps({"http_status": status, "report_source": "gateway; not independently verified",
             "warning": "Bytecode heuristics are not a security certification.",
